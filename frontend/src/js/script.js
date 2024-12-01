@@ -97,6 +97,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                 parseInt(seconds)
             ));
             
+            // 减少8小时
+            utcDate.setHours(utcDate.getHours() - 8);
+            
             return utcDate.toLocaleTimeString('zh-CN', {
                 hour: '2-digit',
                 minute: '2-digit',
@@ -486,7 +489,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             try {
                 const tasks = await fetchAPI(`/tasks?date=${formattedDate}`);
-                // 确保 tasks 是数组且不为空
+                // 确保 tasks 是数组且不为
                 if (Array.isArray(tasks) && tasks.length > 0) {
                     dayElement.appendChild(createTaskIndicator(tasks));
                 }
@@ -716,8 +719,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         const taskDate = document.getElementById('taskDate');
         
         // 初始化时设置日期为今天
-        const today = new Date();
-        taskDate.value = formatDate(today);
+        taskDate.value = formatDate(new Date());
         updateSelectedWeekday(taskDate.value);
         
         if (isRecurringCheckbox) {
@@ -741,16 +743,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     // 更新选中的星期几
     function updateSelectedWeekday(dateString) {
         try {
-            const selectedDate = new Date(dateString);
-            if (isNaN(selectedDate.getTime())) {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) {
                 console.error('Invalid date:', dateString);
                 return;
             }
 
-            const dayOfWeek = selectedDate.getDay();
+            const beijingDate = getBeijingDate(date);
+            const dayOfWeek = beijingDate.getUTCDay();
             const weekdayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
             
-            // 只显示选中日期对应的周几
             document.querySelectorAll('.weekday-buttons button').forEach(btn => {
                 const btnDay = parseInt(btn.getAttribute('data-day'));
                 if (btnDay === dayOfWeek) {
@@ -758,7 +760,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     btn.innerHTML = `<strong>${weekdayNames[btnDay]}</strong>`;
                 } else {
                     btn.classList.remove('selected');
-                    btn.innerHTML = ''; // 清空其他按钮的内容
+                    btn.innerHTML = weekdayNames[btnDay];
                 }
             });
         } catch (error) {
@@ -797,17 +799,20 @@ document.addEventListener('DOMContentLoaded', async function() {
             return;
         }
 
+        // 将本地时间转换为 UTC 时间
+        const utcTime = convertLocalTimeToUTC(taskTime.value);
+        console.log('Local time:', taskTime.value, 'UTC time:', utcTime);
+
         let dates = [];
         if (isRecurring) {
-            const selectedWeekday = new Date(taskDate.value).getDay();
+            const selectedDate = new Date(taskDate.value);
+            const selectedWeekday = selectedDate.getDay();
             const weeks = parseInt(weekCount.value);
-            const startDate = new Date(taskDate.value);
             
-            // 生成未来 n 周的日期
             for (let w = 0; w < weeks; w++) {
-                const date = new Date(startDate);
-                date.setDate(date.getDate() + (7 * w));
-                dates.push(formatDate(date));
+                const futureDate = new Date(selectedDate);
+                futureDate.setDate(futureDate.getDate() + (7 * w));
+                dates.push(formatDateForDisplay(futureDate));
             }
         } else {
             dates = [taskDate.value];
@@ -824,7 +829,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     body: JSON.stringify({
                         content: taskInput.value,
                         date: date,
-                        time: taskTime.value,
+                        time: utcTime,  // 发送 UTC 时间到后端
                         isRecurring: isRecurring,
                         weekCount: isRecurring ? parseInt(weekCount.value) : null
                     })
@@ -851,7 +856,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         // 重置日期为今天
         const today = new Date();
-        taskDate.value = formatDate(today);
+        taskDate.value = formatDateForDisplay(today);
         updateSelectedWeekday(taskDate.value);
 
         // 刷新任务列表
@@ -861,10 +866,33 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // 格式化日期函数
     function formatDate(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
+        const beijingDate = getBeijingDate(date);
+        const year = beijingDate.getUTCFullYear();
+        const month = String(beijingDate.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(beijingDate.getUTCDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
+    }
+
+    // 格式化时间为 HH:mm
+    function formatTime(timeStr) {
+        return timeStr; // 直接返回时间字符串，因为输入框的时间已经是本地时间
+    }
+
+    // 解析日期时间字符串为UTC时间
+    function parseDateTime(dateStr, timeStr) {
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        
+        // 创建本地时间对象
+        const localDate = new Date(year, month - 1, day, hours, minutes);
+        // 转换为UTC时间
+        const utcDate = new Date(localDate.getTime() - (8 * 60 * 60 * 1000));
+        return utcDate;
+    }
+
+    // 时区处理函数
+    function getBeijingDate(date = new Date()) {
+        return new Date(date.getTime() + (8 * 60 * 60 * 1000));
     }
 
     document.getElementById('taskDate').addEventListener('change', function() {
@@ -882,4 +910,265 @@ document.addEventListener('DOMContentLoaded', async function() {
             buttonToHighlight.classList.add('active');
         }
     });
+
+    // 加载任务列表
+    async function loadTodayTasks() {
+        try {
+            const today = formatDate(new Date());
+            const response = await fetch(`/api/tasks?date=${today}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch tasks');
+            }
+            const tasks = await response.json();
+            
+            // 分类任务
+            const pendingTasks = tasks.filter(task => !task.completed);
+            const completedTasks = tasks.filter(task => task.completed);
+            
+            // 更新显示
+            updateTaskList('pendingTasks', pendingTasks);
+            updateTaskList('completedTasks', completedTasks);
+        } catch (error) {
+            console.error('Error loading tasks:', error);
+        }
+    }
+
+    // 切换任务状态
+    async function toggleTaskStatus(taskId) {
+        try {
+            const now = new Date();
+            const utcTime = now.toISOString().slice(0, 19).replace('T', ' ');
+            
+            const response = await fetch(`/api/tasks/${taskId}/toggle`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    completed_time: utcTime
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update task status');
+            }
+
+            await loadTodayTasks();
+            updateCalendar();
+        } catch (error) {
+            console.error('更新任务状态失败:', error);
+        }
+    }
+
+    // 显示任务时间
+    function displayTaskTime(timeStr) {
+        if (!timeStr) return '';
+        try {
+            // 假设后端返回的时间是 UTC 时间，需要转换为本地时间
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            const date = new Date();
+            date.setUTCHours(hours, minutes);
+            const localHours = date.getHours();
+            const localMinutes = date.getMinutes();
+            return `${String(localHours).padStart(2, '0')}:${String(localMinutes).padStart(2, '0')}`;
+        } catch (error) {
+            console.error('Error parsing time:', error);
+            return timeStr;
+        }
+    }
+
+    // 将本地时间转换为 UTC 时间
+    function convertLocalTimeToUTC(timeStr) {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        const date = new Date();
+        date.setHours(hours, minutes);
+        return `${String(date.getUTCHours()).padStart(2, '0')}:${String(date.getUTCMinutes()).padStart(2, '0')}`;
+    }
+
+    // 更新任务列表显示
+    function updateTaskList(elementId, tasks) {
+        const taskList = document.getElementById(elementId);
+        if (!taskList) return;
+
+        taskList.innerHTML = '';
+        tasks.forEach(task => {
+            const li = document.createElement('li');
+            li.className = 'task-item';
+            
+            // 显示本地时间
+            const displayTime = displayTaskTime(task.time);
+            console.log('Server time:', task.time, 'Display time:', displayTime);
+            
+            li.innerHTML = `
+                <div class="task-content">
+                    <label class="checkbox-container">
+                        <input type="checkbox" ${task.completed ? 'checked' : ''}>
+                        <span class="checkmark"></span>
+                    </label>
+                    <span class="task-text">${task.content}</span>
+                    <span class="task-time">${displayTime}</span>
+                </div>
+                <button class="delete-task" data-task-id="${task.id}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+
+            // 添加任务完成状态切换事件
+            const checkbox = li.querySelector('input[type="checkbox"]');
+            checkbox.addEventListener('change', () => toggleTaskStatus(task.id));
+
+            // 添加删除任务事件
+            const deleteBtn = li.querySelector('.delete-task');
+            deleteBtn.addEventListener('click', () => deleteTask(task.id));
+
+            taskList.appendChild(li);
+        });
+    }
+
+    // 初始化日历
+    async function initializeCalendar() {
+        const today = new Date();
+        currentDate = today;
+        await updateCalendar();
+        // 确保默认选中今天并加载任务
+        const todayCell = document.querySelector('.calendar-day.today');
+        if (todayCell) {
+            todayCell.classList.add('selected');
+            await loadSelectedDateTasks(formatDateForDisplay(today));
+        }
+    }
+
+    // 更新日历
+    async function updateCalendar() {
+        const calendarElement = document.getElementById('calendar');
+        if (!calendarElement) return;
+
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        
+        // 更新月份显示
+        document.getElementById('currentMonth').textContent = `${year}年${month + 1}月`;
+        
+        // 清空日历
+        calendarElement.innerHTML = '';
+        
+        // 获取当月第一天和最后一天
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        
+        // 创建日历网格
+        const days = [];
+        
+        // 添加上个月的日期
+        const firstDayOfWeek = firstDay.getDay();
+        const prevMonthLastDay = new Date(year, month, 0).getDate();
+        for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+            const date = new Date(year, month - 1, prevMonthLastDay - i);
+            days.push(createDayElement(date, true));
+        }
+        
+        // 添加当月的日期
+        for (let date = 1; date <= lastDay.getDate(); date++) {
+            const currentDate = new Date(year, month, date);
+            days.push(createDayElement(currentDate, false));
+        }
+        
+        // 添加下个月的日期
+        const remainingDays = 42 - days.length; // 保持6行
+        for (let date = 1; date <= remainingDays; date++) {
+            const nextMonthDate = new Date(year, month + 1, date);
+            days.push(createDayElement(nextMonthDate, true));
+        }
+        
+        // 将日期添加到日历中
+        days.forEach(day => calendarElement.appendChild(day));
+    }
+
+    // 创建日期元素
+    function createDayElement(date, isOtherMonth) {
+        const dayElement = document.createElement('div');
+        dayElement.className = 'calendar-day';
+        if (isOtherMonth) {
+            dayElement.classList.add('other-month');
+        }
+        
+        // 检查是否是今天
+        const today = new Date();
+        if (date.toDateString() === today.toDateString()) {
+            dayElement.classList.add('today');
+        }
+        
+        dayElement.textContent = date.getDate();
+        
+        // 为每个日期添加点击事件
+        dayElement.addEventListener('click', async () => {
+            // 移除其他日期的选中状态
+            document.querySelectorAll('.calendar-day').forEach(day => {
+                day.classList.remove('selected');
+            });
+            
+            // 添加选中状态
+            dayElement.classList.add('selected');
+            
+            // 加载该日期的任务
+            const formattedDate = formatDateForDisplay(date);
+            await loadSelectedDateTasks(formattedDate);
+        });
+        
+        return dayElement;
+    }
+
+    // 加载选中日期的任务
+    async function loadSelectedDateTasks(date) {
+        try {
+            const response = await fetch(`/api/tasks?date=${date}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch tasks');
+            }
+            const tasks = await response.json();
+            
+            // 更新标题
+            const selectedDateTitle = document.getElementById('selectedDateTitle');
+            if (selectedDateTitle) {
+                const displayDate = new Date(date);
+                selectedDateTitle.textContent = `${displayDate.getMonth() + 1}月${displayDate.getDate()}日任务`;
+            }
+            
+            // 更新任务统计
+            updateTaskStatistics(tasks);
+            
+            // 更新任务列表
+            const taskList = document.getElementById('selectedDateTaskList');
+            if (taskList) {
+                taskList.innerHTML = '';
+                tasks.forEach(task => {
+                    const li = document.createElement('li');
+                    const displayTime = displayTaskTime(task.time);
+                    li.innerHTML = `
+                        <div class="task-content">
+                            <span class="task-text">${task.content}</span>
+                            <span class="task-time">${displayTime}</span>
+                            <span class="task-status">${task.completed ? '已完成' : '待完成'}</span>
+                        </div>
+                    `;
+                    taskList.appendChild(li);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading selected date tasks:', error);
+        }
+    }
+
+    // 更新任务统计
+    function updateTaskStatistics(tasks) {
+        const totalTasks = tasks.length;
+        const completedTasks = tasks.filter(task => task.completed).length;
+        const pendingTasks = totalTasks - completedTasks;
+        const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+        document.getElementById('totalTasks').textContent = totalTasks;
+        document.getElementById('completedTasksCount').textContent = completedTasks;
+        document.getElementById('pendingTasksCount').textContent = pendingTasks;
+        document.getElementById('completionRate').textContent = `${completionRate}%`;
+    }
 }); 
