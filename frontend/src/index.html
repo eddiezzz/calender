@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时间管理</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <main>
+            <div class="tab-content active" id="today-tab">
+                <div class="today-container">
+                    <div class="add-task">
+                        <input type="text" id="taskInput" placeholder="输入新任务">
+                        <input type="date" id="taskDate">
+                        <input type="time" id="taskTime" required>
+                        <div class="recurring-task-options">
+                            <label class="recurring-checkbox">
+                                <input type="checkbox" id="isRecurring">
+                                <span>周期性任务</span>
+                            </label>
+                            <div id="weekCountContainer" style="display: none;">
+                                <input type="number" id="weekCount" min="1" max="52" value="1">
+                                <span>周</span>
+                            </div>
+                        </div>
+                        <button id="addTask">添加任务</button>
+                    </div>
+                    <div class="task-groups">
+                        <div class="task-group">
+                            <h3>待完成任务</h3>
+                            <ul id="pendingTasks" class="task-list"></ul>
+                        </div>
+                        <div class="task-group completed-tasks">
+                            <h3>已完成任务</h3>
+                            <ul id="completedTasks" class="task-list"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="calendar-tab">
+                <div class="calendar-container">
+                    <div class="calendar-nav">
+                        <button id="prevMonth">上一周</button>
+                        <h2 id="currentMonth"></h2>
+                        <button id="nextMonth">下一周</button>
+                    </div>
+                    <div class="calendar-view">
+                        <div class="weekdays">
+                            <div>日</div>
+                            <div>一</div>
+                            <div>二</div>
+                            <div>三</div>
+                            <div>四</div>
+                            <div>五</div>
+                            <div>六</div>
+                        </div>
+                        <div id="calendar" class="calendar-grid"></div>
+                    </div>
+                    <div class="selected-date-tasks">
+                        <h3 id="selectedDateTitle">任务完成情况</h3>
+                        <div class="task-summary">
+                            <div class="summary-item">
+                                <span class="summary-label">总任务数</span>
+                                <span id="totalTasks" class="summary-value">0</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">已完成</span>
+                                <span id="completedTasksCount" class="summary-value completed">0</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">待完成</span>
+                                <span id="pendingTasksCount" class="summary-value pending">0</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">完成率</span>
+                                <span id="completionRate" class="summary-value">0%</span>
+                            </div>
+                        </div>
+                        <div class="task-list-container">
+                            <h4>当日任务列表</h4>
+                            <ul id="selectedDateTaskList" class="task-list"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="today">
+                <i class="fas fa-tasks"></i>
+                <span>今日任务</span>
+            </button>
+            <button class="tab-btn" data-tab="calendar">
+                <i class="far fa-calendar-alt"></i>
+                <span>月度日历</span>
+            </button>
+        </nav>
+    </div>
+    <script src="js/script.js"></script>
+</body>
+</html> 
