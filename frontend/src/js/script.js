@@ -269,7 +269,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     });
                     await loadTasks(new Date());
                 } catch (error) {
-                    console.error('更新任务状态失败:', error);
+                    console.error('新任务态失败:', error);
                 }
             };
             taskActions.appendChild(completeBtn);
@@ -375,7 +375,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             btn.classList.add('active');
             document.getElementById(`${tabId}-tab`).classList.add('active');
 
-            // 切换标签页时加载相应的任务
+            // 换标签页时加载相应的任务
             if (tabId === 'today') {
                 await loadTasks(new Date());
             } else if (tabId === 'calendar') {
@@ -617,9 +617,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     await initialize();
 
     // 周期性任务选项的事件监听
-    document.getElementById('isRecurring').addEventListener('change', function(e) {
-        document.getElementById('weekCountContainer').style.display = 
-            e.target.checked ? 'block' : 'none';
+    document.getElementById('isRecurring').addEventListener('change', function() {
+        const weekdaySelection = document.getElementById('weekdaySelection');
+        if (this.checked) {
+            weekdaySelection.style.display = 'block';
+        } else {
+            weekdaySelection.style.display = 'none';
+        }
     });
 
     const isRecurringCheckbox = document.getElementById('isRecurring');
@@ -630,6 +634,252 @@ document.addEventListener('DOMContentLoaded', async function() {
             weekCountContainer.style.display = 'block';
         } else {
             weekCountContainer.style.display = 'none';
+        }
+    });
+
+    // Tab 切换功能
+    function initializeTabs() {
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabId = btn.getAttribute('data-tab');
+                
+                // 移除所有活动状态
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                // 设置当前 tab 为活动状态
+                btn.classList.add('active');
+                document.getElementById(`${tabId}-tab`).classList.add('active');
+
+                // 如果切换到今日任务，重新加载任务
+                if (tabId === 'today') {
+                    loadTodayTasks();
+                }
+                // 如果切换到月度日历，刷新日历
+                else if (tabId === 'calendar') {
+                    updateCalendar();
+                }
+            });
+        });
+
+        // 默认显示今日任务
+        document.querySelector('.tab-btn[data-tab="today"]').click();
+    }
+
+    // 初始化应用
+    async function initializeApp() {
+        initializeTabs();
+        setupEventListeners();
+        setupRecurringTaskHandlers();
+        await loadTodayTasks();
+        initializeCalendar();
+    }
+
+    // 设置事件监听器
+    function setupEventListeners() {
+        // 添加任务按钮事件
+        const addTaskBtn = document.getElementById('addTask');
+        if (addTaskBtn) {
+            addTaskBtn.addEventListener('click', handleAddTask);
+        }
+
+        // 周期性任务复选框事件
+        const isRecurringCheckbox = document.getElementById('isRecurring');
+        const weekCountContainer = document.getElementById('weekCountContainer');
+        if (isRecurringCheckbox && weekCountContainer) {
+            isRecurringCheckbox.addEventListener('change', (e) => {
+                weekCountContainer.style.display = e.target.checked ? 'block' : 'none';
+            });
+        }
+
+        // 日历导航按钮事件
+        const prevMonthBtn = document.getElementById('prevMonth');
+        const nextMonthBtn = document.getElementById('nextMonth');
+        if (prevMonthBtn && nextMonthBtn) {
+            prevMonthBtn.addEventListener('click', () => navigateCalendar(-1));
+            nextMonthBtn.addEventListener('click', () => navigateCalendar(1));
+        }
+
+        // 处理周期性任务选项
+        setupRecurringTaskHandlers();
+    }
+
+    // 处理周期性任务选项
+    function setupRecurringTaskHandlers() {
+        const isRecurringCheckbox = document.getElementById('isRecurring');
+        const dateSelection = document.getElementById('dateSelection');
+        const weekdaySelection = document.getElementById('weekdaySelection');
+        const weekCountContainer = document.getElementById('weekCountContainer');
+        const taskDate = document.getElementById('taskDate');
+        
+        // 初始化时设置日期为今天
+        const today = new Date();
+        taskDate.value = formatDate(today);
+        updateSelectedWeekday(taskDate.value);
+        
+        if (isRecurringCheckbox) {
+            isRecurringCheckbox.addEventListener('change', (e) => {
+                const isRecurring = e.target.checked;
+                weekdaySelection.style.display = isRecurring ? 'block' : 'none';
+                weekCountContainer.style.display = isRecurring ? 'block' : 'none';
+            });
+        }
+
+        // 日期选择事件
+        if (taskDate) {
+            taskDate.addEventListener('change', (e) => {
+                if (e.target.value) {
+                    updateSelectedWeekday(e.target.value);
+                }
+            });
+        }
+    }
+
+    // 更新选中的星期几
+    function updateSelectedWeekday(dateString) {
+        try {
+            const selectedDate = new Date(dateString);
+            if (isNaN(selectedDate.getTime())) {
+                console.error('Invalid date:', dateString);
+                return;
+            }
+
+            const dayOfWeek = selectedDate.getDay();
+            const weekdayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+            
+            // 只显示选中日期对应的周几
+            document.querySelectorAll('.weekday-buttons button').forEach(btn => {
+                const btnDay = parseInt(btn.getAttribute('data-day'));
+                if (btnDay === dayOfWeek) {
+                    btn.classList.add('selected');
+                    btn.innerHTML = `<strong>${weekdayNames[btnDay]}</strong>`;
+                } else {
+                    btn.classList.remove('selected');
+                    btn.innerHTML = ''; // 清空其他按钮的内容
+                }
+            });
+        } catch (error) {
+            console.error('Error updating weekday:', error);
+        }
+    }
+
+    // 获取选中的周几（用于提交表单时）
+    function getSelectedWeekdays() {
+        const taskDate = document.getElementById('taskDate');
+        const isRecurring = document.getElementById('isRecurring').checked;
+        
+        if (isRecurring && taskDate.value) {
+            try {
+                const selectedDate = new Date(taskDate.value);
+                if (!isNaN(selectedDate.getTime())) {
+                    return [selectedDate.getDay().toString()];
+                }
+            } catch (error) {
+                console.error('Error getting selected weekday:', error);
+            }
+        }
+        return [];
+    }
+
+    // 修改添加任务的处理函数
+    async function handleAddTask() {
+        const taskInput = document.getElementById('taskInput');
+        const taskDate = document.getElementById('taskDate');
+        const taskTime = document.getElementById('taskTime');
+        const isRecurring = document.getElementById('isRecurring').checked;
+        const weekCount = document.getElementById('weekCount');
+
+        if (!taskInput.value || !taskDate.value || !taskTime.value) {
+            alert('请填写完整信息');
+            return;
+        }
+
+        let dates = [];
+        if (isRecurring) {
+            const selectedWeekday = new Date(taskDate.value).getDay();
+            const weeks = parseInt(weekCount.value);
+            const startDate = new Date(taskDate.value);
+            
+            // 生成未来 n 周的日期
+            for (let w = 0; w < weeks; w++) {
+                const date = new Date(startDate);
+                date.setDate(date.getDate() + (7 * w));
+                dates.push(formatDate(date));
+            }
+        } else {
+            dates = [taskDate.value];
+        }
+
+        // 为每个日期创建任务
+        for (let date of dates) {
+            try {
+                const response = await fetch('/api/tasks', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        content: taskInput.value,
+                        date: date,
+                        time: taskTime.value,
+                        isRecurring: isRecurring,
+                        weekCount: isRecurring ? parseInt(weekCount.value) : null
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to add task');
+                }
+            } catch (error) {
+                console.error('Error adding task:', error);
+                alert('添加任务失败');
+                return;
+            }
+        }
+
+        // 清空输入
+        taskInput.value = '';
+        taskTime.value = '';
+        if (isRecurring) {
+            document.getElementById('isRecurring').checked = false;
+            document.getElementById('weekdaySelection').style.display = 'none';
+            document.getElementById('weekCountContainer').style.display = 'none';
+        }
+
+        // 重置日期为今天
+        const today = new Date();
+        taskDate.value = formatDate(today);
+        updateSelectedWeekday(taskDate.value);
+
+        // 刷新任务列表
+        await loadTodayTasks();
+        updateCalendar();
+    }
+
+    // 格式化日期函数
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    document.getElementById('taskDate').addEventListener('change', function() {
+        const selectedDate = new Date(this.value);
+        const dayOfWeek = selectedDate.getDay();
+        
+        // 清除之前的高亮
+        document.querySelectorAll('.weekday-buttons button').forEach(button => {
+            button.classList.remove('active');
+        });
+
+        // 高亮当前选择的星期几
+        const buttonToHighlight = document.querySelector(`.weekday-buttons button[data-day="${dayOfWeek}"]`);
+        if (buttonToHighlight) {
+            buttonToHighlight.classList.add('active');
         }
     });
 }); 

@@ -35,10 +35,9 @@
 }
 
 html, body {
+    margin: 0;
+    padding: 0;
     height: 100%;
-    width: 100%;
-    overflow: hidden;
-    background-color: var(--background-color);
 }
 
 body {
@@ -50,27 +49,24 @@ body {
 }
 
 .app-container {
-    height: 100%;
-    width: 100%;
-    max-width: var(--max-width);
-    margin: 0 auto;
     display: flex;
     flex-direction: column;
-    background-color: var(--background-color);
-    position: relative;
+    height: 100vh;
+    max-width: 1200px;
+    margin: 0 auto;
+    background: #fff;
 }
 
 main {
     flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: var(--spacing-unit);
-    padding-bottom: calc(var(--nav-height) + var(--spacing-unit));
+    position: relative;
+    height: calc(100vh - 60px);
 }
 
 .tab-content {
     display: none;
     height: 100%;
+    overflow-y: auto;
 }
 
 .tab-content.active {
@@ -79,119 +75,157 @@ main {
 
 /* 导航栏样式 */
 .tab-nav {
-    position: fixed;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100%;
-    max-width: var(--max-width);
-    height: var(--nav-height);
-    background-color: var(--surface-color);
     display: flex;
     justify-content: space-around;
-    align-items: center;
-    box-shadow: 0 -1px 8px rgba(0, 0, 0, 0.05);
-    padding-bottom: env(safe-area-inset-bottom);
-    z-index: 100;
+    background: #fff;
+    border-top: 1px solid #eee;
+    padding: 10px 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    z-index: 1000;
 }
 
 .tab-btn {
-    flex: 1;
-    height: 100%;
-    border: none;
-    background: none;
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-    font-weight: 500;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 4px;
-    transition: all var(--transition-fast);
+    padding: 8px 16px;
+    border: none;
+    background: none;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s;
 }
 
 .tab-btn i {
-    font-size: 1.25rem;
-    margin-bottom: 2px;
-}
-
-.tab-btn span {
-    font-size: 0.75rem;
+    font-size: 1.2em;
+    margin-bottom: 4px;
 }
 
 .tab-btn.active {
-    color: var(--primary-color);
+    color: #007bff;
+}
+
+/* 添加任务页面样式 */
+#add-task-tab {
+    height: 100%;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.add-task-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding-bottom: 80px;
+}
+
+.add-task-form {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #333;
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.recurring-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.recurring-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+.weekday-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.weekday-buttons button {
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    cursor: default;
+    transition: all 0.3s;
+}
+
+.weekday-buttons button:disabled {
+    background: #f5f5f5;
+    color: #999;
+    border-color: #eee;
+}
+
+.weekday-buttons button.selected:disabled {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+    opacity: 1;
+}
+
+.week-count-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.week-count-input input {
+    width: 80px;
+}
+
+.primary-button {
+    width: 100%;
+    padding: 12px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.primary-button:hover {
+    background: #0056b3;
 }
 
 /* 今日任务样式 */
 .today-container {
-    height: 100%;
-}
-
-.add-task {
-    display: flex;
-    gap: 8px;
-    margin-bottom: var(--spacing-unit);
-    background-color: var(--surface-color);
-    padding: var(--spacing-unit);
-    border-radius: var(--border-radius-md);
-    box-shadow: var(--shadow-sm);
-    flex-wrap: wrap;
-}
-
-.add-task input[type="text"] {
-    flex: 1 1 200px;
-    min-width: 0;
-    height: 44px;
-    padding: 0 12px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    font-size: 0.9375rem;
-}
-
-.add-task input[type="date"],
-.add-task input[type="time"] {
-    flex: 1 1 100px;
-    min-width: 0;
-    height: 44px;
-    padding: 0 12px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    font-size: 0.9375rem;
-    font-family: inherit;
-    transition: all var(--transition-fast);
-}
-
-.add-task input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
-}
-
-.add-task button {
-    flex: 0 0 auto;
-    height: 44px;
-    padding: 0 20px;
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: var(--border-radius-sm);
-    font-size: 0.9375rem;
-    font-weight: 500;
-    white-space: nowrap;
-    transition: all var(--transition-fast);
-}
-
-.add-task button:active {
-    transform: scale(0.96);
+    max-width: 800px;
+    margin: 0 auto;
 }
 
 .task-groups {
-    margin-top: var(--spacing-unit);
-    max-height: calc(100vh - var(--nav-height) - 180px);
-    overflow-y: auto;
-    padding-right: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .task-group {
@@ -311,22 +345,18 @@ main {
 
 /* 日历部分样式 */
 .calendar-container {
-    background-color: var(--surface-color);
-    border-radius: var(--border-radius-md);
-    padding: var(--spacing-unit);
-    box-shadow: var(--shadow-sm);
-    height: calc(100vh - var(--nav-height) - 32px);
+    height: auto;
     display: flex;
     flex-direction: column;
 }
 
 .calendar-nav {
+    padding: 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: var(--spacing-unit);
-    border-bottom: 1px solid var(--border-color);
-    margin-bottom: var(--spacing-unit);
+    background: #fff;
+    margin-bottom: 1rem;
 }
 
 .calendar-nav button {
@@ -356,192 +386,99 @@ main {
 }
 
 .calendar-view {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    margin-bottom: var(--spacing-unit);
-    flex-shrink: 0;
+    padding: 0 1rem;
+    margin-bottom: 2rem;
 }
 
 .weekdays {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     text-align: center;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text-secondary);
-    background-color: var(--background-color);
-    border-radius: var(--border-radius-sm);
-    padding: 12px 0;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
 }
 
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 1px;
-    background-color: var(--border-color);
-    border-radius: var(--border-radius-sm);
-    overflow: hidden;
-}
-
-.calendar-day {
-    background-color: var(--surface-color);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 12px 8px;
-    font-size: 1.125rem;
-    font-weight: 500;
-    position: relative;
-    transition: all var(--transition-fast);
-    height: 80px;
-    cursor: pointer;
-}
-
-.calendar-day:hover {
-    background-color: rgba(0, 122, 255, 0.05);
-}
-
-.calendar-day:active {
-    background-color: rgba(0, 122, 255, 0.1);
-}
-
-.calendar-day.empty {
-    background-color: var(--background-color);
-}
-
-.calendar-day.today {
-    background-color: #E5F1FF;
-    color: var(--primary-color);
-    font-weight: 600;
-}
-
-.calendar-day.selected {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-.calendar-day.other-month {
-    color: var(--text-secondary);
-    background-color: var(--background-color);
-}
-
-/* 日历中的任务指示器 */
-.calendar-day .task-indicator {
-    position: absolute;
-    bottom: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
     gap: 4px;
 }
 
-.task-indicator .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background-color: var(--text-secondary);
+.calendar-day {
+    aspect-ratio: 1;
+    padding: 0.5rem;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s;
 }
 
-.task-indicator .dot.completed {
-    background-color: var(--secondary-color);
+.calendar-day:hover {
+    background-color: #f5f5f5;
 }
 
-.task-indicator .dot.pending {
-    background-color: var(--primary-color);
+.calendar-day.selected {
+    background-color: #e3f2fd;
+    border-color: #2196f3;
+}
+
+.calendar-day.today {
+    background-color: #fff3e0;
+    border-color: #ff9800;
 }
 
 .selected-date-tasks {
-    flex: 1;
-    overflow-y: auto;
-    padding-top: var(--spacing-unit);
-    border-top: 1px solid var(--border-color);
-}
-
-/* 自定义滚动条样式 */
-.task-groups::-webkit-scrollbar,
-.selected-date-tasks::-webkit-scrollbar {
-    width: 5px;
-}
-
-.task-groups::-webkit-scrollbar-track,
-.selected-date-tasks::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.task-groups::-webkit-scrollbar-thumb,
-.selected-date-tasks::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 3px;
-}
-
-.task-groups::-webkit-scrollbar-thumb:hover,
-.selected-date-tasks::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.2);
-}
-
-/* 响应式调整 */
-@media (min-width: 481px) {
-    .app-container {
-        border-left: 1px solid var(--border-color);
-        border-right: 1px solid var(--border-color);
-    }
+    padding: 1rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .task-summary {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-    padding: 16px;
-    background-color: var(--surface-color);
-    border-radius: var(--border-radius-md);
-    margin-bottom: var(--spacing-unit);
-    box-shadow: var(--shadow-sm);
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
 }
 
 .summary-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 12px;
-    background-color: var(--background-color);
-    border-radius: var(--border-radius-sm);
+    padding: 1rem;
+    background: #f5f5f5;
+    border-radius: 4px;
+    text-align: center;
 }
 
 .summary-label {
+    display: block;
     font-size: 0.875rem;
-    color: var(--text-secondary);
-    font-weight: 500;
+    color: #666;
+    margin-bottom: 0.5rem;
 }
 
 .summary-value {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--text-primary);
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #333;
 }
 
 .summary-value.completed {
-    color: var(--secondary-color);
+    color: #4caf50;
 }
 
 .summary-value.pending {
-    color: var(--primary-color);
+    color: #ff9800;
 }
 
 .task-list-container {
-    background-color: var(--surface-color);
-    border-radius: var(--border-radius-md);
-    padding: var(--spacing-unit);
-    box-shadow: var(--shadow-sm);
+    margin-top: 1rem;
 }
 
 .task-list-container h4 {
-    font-size: 1rem;
-    color: var(--text-primary);
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1rem;
+    color: #333;
 }
 
 /* 移动端适配 */
@@ -615,5 +552,68 @@ main {
 #weekCountContainer span {
     font-size: 14px;
     color: var(--text-primary);
+}
+
+.weekday-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.weekday-buttons button {
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.weekday-buttons button:disabled {
+    background: #f5f5f5;
+    color: #999;
+    cursor: default;
+    border-color: #eee;
+}
+
+.weekday-buttons button.selected {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.weekday-buttons button.selected:disabled {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+    opacity: 1;
+}
+
+.week-count-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.week-count-input input {
+    width: 80px;
+}
+
+.recurring-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.recurring-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+.weekday-buttons button.active {
+    background-color: #007bff;
+    color: white;
 }
   
