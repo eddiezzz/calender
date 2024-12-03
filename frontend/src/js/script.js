@@ -1112,6 +1112,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             // 加载该日期的任务
             const formattedDate = formatDateForDisplay(date);
+            console.log('Loading tasks for date:', formattedDate); // 调试日志
             await loadSelectedDateTasks(formattedDate);
         });
         
@@ -1121,11 +1122,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     // 加载选中日期的任务
     async function loadSelectedDateTasks(date) {
         try {
+            console.log('Fetching tasks for date:', date); // 调试日志
             const response = await fetch(`/api/tasks?date=${date}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch tasks');
             }
             const tasks = await response.json();
+            console.log('Received tasks:', tasks); // 调试日志
             
             // 更新标题
             const selectedDateTitle = document.getElementById('selectedDateTitle');
@@ -1139,21 +1142,33 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             // 更新任务列表
             const taskList = document.getElementById('selectedDateTaskList');
-            if (taskList) {
-                taskList.innerHTML = '';
-                tasks.forEach(task => {
-                    const li = document.createElement('li');
-                    const displayTime = displayTaskTime(task.time);
-                    li.innerHTML = `
-                        <div class="task-content">
-                            <span class="task-text">${task.content}</span>
-                            <span class="task-time">${displayTime}</span>
-                            <span class="task-status">${task.completed ? '已完成' : '待完成'}</span>
-                        </div>
-                    `;
-                    taskList.appendChild(li);
-                });
+            if (!taskList) {
+                console.error('Task list element not found'); // 调试日志
+                return;
             }
+
+            taskList.innerHTML = '';
+            if (tasks.length === 0) {
+                // 如果没有任务，显示提示信息
+                taskList.innerHTML = '<li class="no-tasks">当日暂无任务</li>';
+                return;
+            }
+
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = 'task-item';
+                const displayTime = displayTaskTime(task.time);
+                li.innerHTML = `
+                    <div class="task-content">
+                        <span class="task-text">${task.content || task.title}</span>
+                        <span class="task-time">${displayTime}</span>
+                        <span class="task-status ${task.completed ? 'completed' : 'pending'}">
+                            ${task.completed ? '已完成' : '待完成'}
+                        </span>
+                    </div>
+                `;
+                taskList.appendChild(li);
+            });
         } catch (error) {
             console.error('Error loading selected date tasks:', error);
         }
@@ -1166,9 +1181,29 @@ document.addEventListener('DOMContentLoaded', async function() {
         const pendingTasks = totalTasks - completedTasks;
         const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-        document.getElementById('totalTasks').textContent = totalTasks;
-        document.getElementById('completedTasksCount').textContent = completedTasks;
-        document.getElementById('pendingTasksCount').textContent = pendingTasks;
-        document.getElementById('completionRate').textContent = `${completionRate}%`;
+        // 添加空值检查
+        const elements = {
+            'totalTasks': totalTasks,
+            'completedTasksCount': completedTasks,
+            'pendingTasksCount': pendingTasks,
+            'completionRate': `${completionRate}%`
+        };
+
+        for (const [id, value] of Object.entries(elements)) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = value;
+            } else {
+                console.error(`Element with id '${id}' not found`); // 调试日志
+            }
+        }
+    }
+
+    // 格式化日期为显示格式
+    function formatDateForDisplay(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 }); 

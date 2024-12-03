@@ -4,6 +4,7 @@ FROM nginx:1.24-alpine
 COPY src/index.html /usr/share/nginx/html/
 COPY src/css /usr/share/nginx/html/css/
 COPY src/js /usr/share/nginx/html/js/
+COPY src/favicon.ico /usr/share/nginx/html/
 
 # 复制自定义nginx配置
 COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
