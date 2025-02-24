@@ -55,18 +55,26 @@ body {
     max-width: 1200px;
     margin: 0 auto;
     background: #fff;
+    position: relative;
+    width: 100%;
 }
 
 main {
     flex: 1;
     position: relative;
     height: calc(100vh - 60px);
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .tab-content {
     display: none;
     height: 100%;
     overflow-y: auto;
+    padding: 20px;
+    padding-bottom: 80px;
+    width: 100%;
 }
 
 .tab-content.active {
@@ -84,6 +92,7 @@ main {
     bottom: 0;
     left: 0;
     right: 0;
+    width: 100%;
     height: 60px;
     z-index: 1000;
 }
@@ -615,5 +624,14 @@ main {
 .weekday-buttons button.active {
     background-color: #007bff;
     color: white;
+}
+
+/* 在大屏幕上限制内容区域宽度 */
+@media (min-width: 1200px) {
+    .tab-nav {
+        max-width: 1200px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
 }
   
